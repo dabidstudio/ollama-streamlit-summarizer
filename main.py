@@ -7,11 +7,8 @@ from langchain.document_loaders import PyPDFLoader
 # Ollama 언어 모델 서버의 기본 URL
 CUSTOM_URL = "http://localhost:11434"
 
-# Streamlit 앱의 레이아웃과 제목 구성
-# st.set_page_config(layout="wide", page_title="🦜🔗 Summarization App")
-st.title(" 🦜 PDF을 요약해드려요")
 
-# 영어 요약을 위한 Ollama 언어 모델 초기화
+# 요약을 위한 Ollama 언어 모델 초기화
 llm = Ollama(
     model="bnksys/yanolja-eeve-korean-instruct-10.8b:latest", 
     base_url=CUSTOM_URL, 
@@ -19,18 +16,8 @@ llm = Ollama(
     num_predict=200
 )
 
-# PDF 파일을 읽고 처리하기 위한 리소스 캐시
-@st.cache_resource
+# PDF 파일을 읽고 처리하기 위한 함수
 def read_file(file_name):
-    """
-    PDF 파일을 읽고 관리 가능한 청크로 나눕니다.
-
-    Args:
-        file_name (UploadedFile): 업로드된 PDF 파일.
-
-    Returns:
-        list: 문서 청크 리스트.
-    """
     with tempfile.NamedTemporaryFile(delete=False) as tf:
         tf.write(file_name.getbuffer())
         file_path = tf.name
@@ -44,13 +31,9 @@ def read_file(file_name):
     )
     return text_splitter.split_documents(documents)
 
+# 문서 청크 리스트가 있으면 요약을 해주는 함수
 def summarize_documents(txt_input):
-    """
-    업로드된 문서를 요약하고 요약을 표시합니다.
 
-    Args:
-        txt_input (list): 요약할 문서 청크 리스트.
-    """
     map_prompt_template = """
     - 당신은 전문 요약가입니다.
     - 제공된 텍스트의 간결한 요약을 만들어 주세요.
@@ -67,6 +50,9 @@ def summarize_documents(txt_input):
         for chunk in stream_generator:
             summary_result += chunk
             message_placeholder.markdown(summary_result)
+
+# Streamlit 앱의 제목 구성
+st.title(" 🦜 PDF을 요약해드려요")
 
 def main():
     """
